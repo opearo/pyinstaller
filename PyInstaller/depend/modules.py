@@ -135,7 +135,7 @@ class NamespaceModule(PkgModule):
     _ispkg = 1
 
     def __init__(self, nm, pth):
-        fnm = os.path.join(pth[0], '__init__.py')
+        fnm = os.path.join(pth[-1], '__init__.py')
         co = compile('', fnm, 'exec')
         PkgModule.__init__(self, nm, fnm, co)
         self.__path__ = pth
@@ -146,6 +146,15 @@ class NamespaceModule(PkgModule):
         self.__path__ = pkgutil.extend_path(self.__path__, fqname)
         self._update_director(force=True)
         m =  PkgModule.doimport(self, nm)
+        if not m:
+            #new_path = self.__path__
+            #new_path.append(os.path.join(new_path[-1], nm))
+            new_path = [os.path.join(self.__path__[-1], nm)]
+            if os.path.isdir(new_path[-1]):
+                #package to import must be a nested namespace package,
+                #since it wasn't imported successfully and its parent
+                #is a namespace package
+                m = NamespaceModule(fqname, new_path)
         return m
 
 
